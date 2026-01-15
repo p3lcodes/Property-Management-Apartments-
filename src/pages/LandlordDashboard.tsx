@@ -1,6 +1,8 @@
 import { Wallet, Users, Building2, AlertCircle, FileText, ArrowRight, Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { db } from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 import KPICard from '@/components/KPICard';
 import { Button } from '@/components/ui/button';
@@ -10,6 +12,31 @@ import { Badge } from '@/components/ui/badge';
 const LandlordDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    activeTenants: 0,
+    rentCollected: 0,
+    rentTarget: 0,
+    occupancy: 0,
+    totalUnits: 0,
+    overdueCount: 0,
+  });
+
+  useEffect(() => {
+    const tenants = db.getTenants();
+    const totalTenants = tenants.length;
+    const overdueCount = tenants.filter(t => t.balance > 0).length;
+    const totalCollected = tenants.reduce((sum, t) => sum + (t.rentAmount - t.balance), 0);
+    const totalTarget = tenants.reduce((sum, t) => sum + t.rentAmount, 0);
+    
+    setStats({
+      activeTenants: totalTenants,
+      rentCollected: totalCollected,
+      rentTarget: totalTarget,
+      occupancy: totalTenants,
+      totalUnits: 30,
+      overdueCount: overdueCount,
+    });
+  }, []);
 
   // Mock Recent Activities
   const recentActivities = [
@@ -59,15 +86,15 @@ const LandlordDashboard = () => {
           <KPICard
             icon={<Wallet size={24} className="text-primary" />}
             label="Rent Collected"
-            value="KES 485K"
-            subtitle="Target: KES 520K"
+            value={`KES ${(stats.rentCollected / 1000).toFixed(0)}K`}
+            subtitle={`Target: KES ${(stats.rentTarget / 1000).toFixed(0)}K`}
             href="/payments"
             variant="success" 
           />
           <KPICard
             icon={<Users size={24} className="text-blue-600" />}
             label="Active Tenants"
-            value="24"
+            value={stats.activeTenants.toString()}
             subtitle="Total Tenants"
             href="/tenants"
             variant="default"
@@ -75,16 +102,16 @@ const LandlordDashboard = () => {
           <KPICard
             icon={<Building2 size={24} className="text-emerald-600" />}
             label="Occupancy"
-            value="24/30"
-            subtitle="80% Occupied"
+            value={`${stats.occupancy}/${stats.totalUnits}`}
+            subtitle={`${Math.round((stats.occupancy / stats.totalUnits) * 100)}% Occupied`}
             href="/units"
             variant="default"
           />
           <KPICard
             icon={<AlertCircle size={24} className="text-red-500" />}
             label="Overdue"
-            value="5"
-            subtitle=" Tenants in Arrears"
+            value={stats.overdueCount.toString()}
+            subtitle="Tenants in Arrears"
             href="/tenants?filter=arrears"
             variant="error" 
           />
