@@ -1,0 +1,17 @@
+{
+  "name": "P3L Property Management",
+  "short_name": "P3L",
+  "description": "Manage your properties, tenants, and rent collections",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f7f5",
+  "theme_color": "#1a2744",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64",
+      "type": "image/x-icon"
+    }
+  ]
+}
