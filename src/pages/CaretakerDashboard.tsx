@@ -1,6 +1,8 @@
 import { Users, Building2, Home, AlertCircle, LogOut, Phone, UserMinus, MessageSquareWarning, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useEffect, useState } from 'react';
+import { db } from '@/lib/store';
 import PageHeader from '@/components/PageHeader';
 /* BottomNav removed as it is handled by Layout */
 import KPICard from '@/components/KPICard';
@@ -9,6 +11,25 @@ import { Button } from '@/components/ui/button';
 const CaretakerDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const [stats, setStats] = useState({
+    activeTenants: 0,
+    occupiedUnits: 0,
+    vacantUnits: 0,
+    overdueCount: 0,
+  });
+
+  useEffect(() => {
+    const tenants = db.getTenants();
+    const totalTenants = tenants.length;
+    const overdueCount = tenants.filter(t => t.balance > 0).length;
+    
+    setStats({
+      activeTenants: totalTenants,
+      occupiedUnits: totalTenants,
+      vacantUnits: 30 - totalTenants,
+      overdueCount: overdueCount,
+    });
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -91,26 +112,26 @@ const CaretakerDashboard = () => {
           <KPICard
             icon={<Users size={24} strokeWidth={2.5} />}
             label="Active Tenants"
-            value="24"
+            value={stats.activeTenants.toString()}
             href="/tenants"
           />
           <KPICard
             icon={<Building2 size={24} strokeWidth={2.5} />}
             label="Occupied Units"
-            value="24 out of 30"
+            value={`${stats.occupiedUnits} out of 30`}
             href="/units"
           />
           <KPICard
             icon={<Home size={24} strokeWidth={2.5} />}
             label="Vacant Units"
-            value="6"
+            value={stats.vacantUnits.toString()}
             href="/units?filter=vacant"
             variant="warning"
           />
           <KPICard
             icon={<AlertCircle size={24} strokeWidth={2.5} />}
             label="Overdue Tenants"
-            value="3"
+            value={stats.overdueCount.toString()}
             href="/tenants?filter=overdue"
             variant="error"
           />
